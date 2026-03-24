@@ -71,12 +71,33 @@ def parse_typescript(code):
     return "\n".join(toon)
 
 def parse_prisma(code):
+    # モデルのブロックを抽出
     models = re.findall(r'model\s+(\w+)\s+{(.*?)}', code, re.DOTALL)
     toon = ["type:prisma_schema"]
+    
     for name, body in models:
-        fields = re.findall(r'^\s+(\w+)\s+([\w\[\]\?]+)', body, re.MULTILINE)
-        field_str = ",".join([f"{f[0]}:{f[1]}" for f in fields])
-        toon.append(f"  model:{name}[{field_str}]")
+        # 各フィールドを解析 (フィールド名, 型, 属性)
+        # 属性(Attributes)も抽出することでリレーションを把握可能にする
+        fields = re.findall(r'^\s+(\w+)\s+([\w\[\]\?]+)(.*)', body, re.MULTILINE)
+        
+        field_details = []
+        for f_name, f_type, f_attr in fields:
+            f_attr = f_attr.strip()
+            # リレーション (@relation) や ID, Unique などの重要なメタデータのみ抽出
+            meta = ""
+            if "@id" in f_attr: meta = "(pk)"
+            elif "@unique" in f_attr: meta = "(uq)"
+            elif "@relation" in f_attr:
+                # 参照先フィールドなどを抽出
+                rel_match = re.search(r'fields:\s*\[(.*?)\],\s*references:\s*\[(.*?)\]', f_attr)
+                if rel_match:
+                    meta = f"->{rel_match.group(2)}" # 参照先のみ簡潔に表示
+                else:
+                    meta = "(rel)" # 逆参照など
+            
+            field_details.append(f"{f_name}:{f_type}{meta}")
+            
+        toon.append(f"  model:{name}[{','.join(field_details)}]")
     return "\n".join(toon)
 
 def parse_styles(code, ext):
