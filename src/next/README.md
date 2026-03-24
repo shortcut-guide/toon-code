@@ -21,3 +21,12 @@ npm run build:toon
 # Git のステージ上のファイルだけを TOON 化して表示（Mac/Linux例）
 git diff --name-only --cached | grep -E "\.tsx?$" | xargs -I {} python ts2toon.py {}
 ```
+---
+
+## 運用フロー
+ターミナルで実行: npm run build (または npm run sync:ai)
+
+IDEでの操作:
+1. Cloud Code の Gemini チャットを開く。
+2. Ctrl + V (貼り付け) をして送信。
+3. AIの反応: Geminiが「プロジェクト全体の最新構造（TOON）」を把握した状態になり、その後のコード生成やリファクタリングの精度が最大化されます。
