@@ -95,6 +95,20 @@ AIへのプロンプト例:
 
 ```bash
 python project2toon.py . > full_project.toon
+```
+---
+
+# CoD + TOON + GSD フレームワークの定義
+要素,役割,フェーズ,アウトプット
+CoD,思考の凝縮,Plan (戦略),A -> B -> C (ロジックの矢印)
+TOON,構造の量子化,Design (設計),component:X { logic:Y } (構造データ)
+GSD,実行の自動化,Execute (実行),toon2code.py による自動マージとビルド
+
+# 「GSD」ワークフロー
+- Plan (CoD): AIに Draft: A -> B -> C と伝え、TOONパッチを出力させる。
+- Save: AIの回答を patch.toon に保存。
+- Execute (GSD): python gsd.py patch.toon src/App.tsx を実行。
+- Done: エラーがなければ実装完了。エラーがあれば、表示された type:error_log をAIに投げて修正TOONを貰い、再度 gsd.py を回す。
 
 ---
 
