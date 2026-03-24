@@ -83,6 +83,10 @@ git commit -m "feat: add toon2code merger script for applying AI suggestions"
 git push origin main
 ```
 
+- 既存のコードを正規表現でスキャンし、不足しているパーツだけを「差し込む」動きをします。
+- 依存関係の解決: TOONに新しいHook名があれば、自動的に import 文を生成してファイルの先頭に追加します。
+- 柔軟な Props 追加: コンポーネントの閉じタグ /> を検知して、その直前に新しい Props を改行付きで挿入します。
+
 ---
 
 ### 🗺 Roadmap
