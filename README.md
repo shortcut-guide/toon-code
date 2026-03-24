@@ -3,8 +3,7 @@
 このプロジェクトの核心である「コードの量子化」と「トークン節約」を強調し、他の開発者がすぐに試せるような構成にしています。
 
 TOON
-(https://github.com/toon-format/toon)[https://github.com/toon-format/toon]
-
+[https://github.com/toon-format/toon](https://github.com/toon-format/toon)
 
 ---
 
