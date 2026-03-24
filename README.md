@@ -67,10 +67,28 @@ AI から返ってきた TOON を元のコードにマージします。
 
 ---
 
+## toon2code.py: TOON to Source Merger
+🛠 使い方とコミット手順
+AIの回答を保存: Geminiから返ってきたTOONを update.toon として保存します。
+
+マージ実行:
+```
+python toon2code.py update.toon path/to/RankingList.tsx
+```
+
+リポジトリへ追加:
+```
+git add toon2code.py
+git commit -m "feat: add toon2code merger script for applying AI suggestions"
+git push origin main
+```
+
+---
+
 ### 🗺 Roadmap
 
 - [x] **ts2toon.py**: TypeScript/TSX の基本解析と TOON 生成
-- [ ] **toon2code.py**: TOON 構造からソースコードへの自動マージ機能
+- [x] **toon2code.py**: TOON 構造からソースコードへの自動マージ機能
 - [ ] **VS Code Extension**: 右クリックメニューから「Copy as TOON」を実行
 - [ ] **Project Quantizer**: 複数ファイル間の依存関係を 1 つの TOON に集約
 
