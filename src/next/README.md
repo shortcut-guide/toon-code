@@ -4,7 +4,7 @@
 
 ```bash
 "scripts": {
-  "build:toon": "python project2toon.py . > project.toon"
+  "build:toon": "python 2toon.py . > project.toon"
 }
 ```
 
