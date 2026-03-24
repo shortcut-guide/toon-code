@@ -128,3 +128,21 @@ if __name__ == "__main__":
         print("Usage: python ts2toon.py <file>")
     else:
         print(generate_toon(sys.argv[1]))
+
+def parse_error(error_text):
+    """
+    複雑なエラーログを、ファイル名、行数、エラー内容に量子化する
+    """
+    # TypeScriptのエラー形式 (file.ts(line,col): error TSXXXX: message) を抽出
+    error_pattern = r'([\w\/\.-]+)\((\d+),\d+\):\s+error\s+(TS\d+):\s+(.*)'
+    matches = re.findall(error_pattern, error_text)
+    
+    if not matches:
+        return f"type:error_raw\n  msg:{error_text[:200]}"
+
+    toon = ["type:diagnosis"]
+    for file, line, code, msg in matches[:5]: # 上位5つに制限
+        toon.append(f"  at:{file}:{line}")
+        toon.append(f"  code:{code}")
+        toon.append(f"  cause:{msg.strip()}")
+    return "\n".join(toon)
