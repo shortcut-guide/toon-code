@@ -97,7 +97,6 @@ AIへのプロンプト例:
 python project2toon.py . > full_project.toon
 ```
 ---
-
 # CoD + TOON + GSD フレームワークの定義
 要素,役割,フェーズ,アウトプット
 CoD,思考の凝縮,Plan (戦略),A -> B -> C (ロジックの矢印)
@@ -109,7 +108,12 @@ GSD,実行の自動化,Execute (実行),toon2code.py による自動マージと
 - Save: AIの回答を patch.toon に保存。
 - Execute (GSD): python gsd.py patch.toon src/App.tsx を実行。
 - Done: エラーがなければ実装完了。エラーがあれば、表示された type:error_log をAIに投げて修正TOONを貰い、再度 gsd.py を回す。
-
+---
+# GSD 自己修復ワークフロー
+Execute: python gsd.py patch.toon target.tsx でパッチ適用。
+Diagnose: python gsd_repair.py が自動で型チェックし、エラーをTOON化。
+Draft & Repair: AIに「診断TOON」を投げ、新しい「修正TOON」を受け取る。
+Repeat: 1に戻る。
 ---
 
 ### 🗺 Roadmap
