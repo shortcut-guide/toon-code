@@ -6,7 +6,7 @@ def project_to_toon(root_dir):
     # 除外するディレクトリ
     exclude_dirs = {'.git', 'node_modules', '.next', 'dist', 'build', '.cache'}
     # 対象とする拡張子
-    include_exts = {'.ts', '.tsx'}
+    include_exts = {'.ts', '.tsx', '.prisma', '.sql', '.css', '.scss', '.sass', '.json'}
 
     full_project_toon = ["project_root: " + os.path.abspath(root_dir)]
     full_project_toon.append("---")
