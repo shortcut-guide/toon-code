@@ -86,13 +86,23 @@ git push origin main
 - 依存関係の解決: TOONに新しいHook名があれば、自動的に import 文を生成してファイルの先頭に追加します。
 - 柔軟な Props 追加: コンポーネントの閉じタグ /> を検知して、その直前に新しい Props を改行付きで挿入します。
 
+#### 3. プロジェクト全体を一括で「量子化」する
+ディレクトリ内のすべての TypeScript/TSX ファイルをスキャンし、プロジェクトの構造を1つの TOON ブロックにまとめます。AIにプロジェクト全体のコンテキスト（依存関係やアーキテクチャ）を伝えたい場合に有効です。
+
+AIへのプロンプト例:
+
+「これがプロジェクト全体の構造です。この構成を維持したまま、新しい共通コンポーネント UserAvatar を components/common に作成し、全ページで適用する設計をTOONで出して。」
+
+```bash
+python project2toon.py . > full_project.toon
+
 ---
 
 ### 🗺 Roadmap
 
 - [x] **ts2toon.py**: TypeScript/TSX の基本解析と TOON 生成
 - [x] **toon2code.py**: TOON 構造からソースコードへの自動マージ機能
-- [ ] **VS Code Extension**: 右クリックメニューから「Copy as TOON」を実行
+- [x] **project2toon.py**: プロジェクト全体の構造を1つに集約
 - [ ] **Project Quantizer**: 複数ファイル間の依存関係を 1 つの TOON に集約
 
 ---
