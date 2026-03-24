@@ -115,7 +115,14 @@ Diagnose: python gsd_repair.py が自動で型チェックし、エラーをTOON
 Draft & Repair: AIに「診断TOON」を投げ、新しい「修正TOON」を受け取る。
 Repeat: 1に戻る。
 ---
+# 自律型自動修復
+gsd_autonomous.py
+Gemini API（または Vertex AI API）と直接通信し、人間を介さずに「エラー検知 → 診断 → CoD思考 → TOONパッチ生成 → 適用 → 再検証」を成功するまで（またはリミットまで）自動で回し続けます。
 
+- Context-Aware: generate_toon を使って、現在のファイルの構造（量子化データ）を Gemini に送ります。これにより、AI はファイル全体を読まずとも、Props や Hooks の構成を把握した上で修正案を出せます。
+- CoD-Driven: プロンプトで「CoD を使って根本原因を特定せよ」と強制しています。これにより、場当たり的な修正ではなく、論理的な裏付けのあるパッチが生成されます。
+- Hands-Free: 人間は python gsd_autonomous.py ... を実行してコーヒーを飲みに行くだけです。AI がビルドを通すまで試行錯誤します。
+---
 ### 🗺 Roadmap
 
 - [x] **ts2toon.py**: TypeScript/TSX の基本解析と TOON 生成
