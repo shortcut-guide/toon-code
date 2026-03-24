@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "dev": "next dev",
-    "build:toon": "python project2toon.py . > dist/project.toon",
-    "build": "next build && npm run build:toon"
+    "build:toon": "python project2toon.py . > project.toon",
+    "sync:ai": "npm run build:toon && node sync-toon.js",
+    "build": "next build && npm run sync:ai"
   }
 }
