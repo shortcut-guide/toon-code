@@ -15,7 +15,8 @@ TOON
 
 ### 🌟 Why TOON Code?
 
-現代の AI 開発において、コンテキストウィンドウの制限とトークンコストは大きな課題です。TOON Code は、冗長な構文を削ぎ落とし、**「データフローと構造」**のみを抽出することで以下のメリットを提供します。
+- 現代の AI 開発において、コンテキストウィンドウの制限とトークンコストは大きな課題です。
+- TOON Code は、冗長な構文を削ぎ落とし、**「データフローと構造」**のみを抽出することで以下のメリットを提供します。
 
 * **トークン削減**: 生の TypeScript/Next.js コードと比較して 70〜90% のトークンを削減。
 * **推論精度の向上**: ノイズ（複雑なロジックやスタイル定義）を排除し、AI がアーキテクチャの核心に集中できるようにします。
@@ -58,7 +59,7 @@ component:RankingList
 ```
 
 #### 2. AI に依頼する
-生成された TOON をコピーして、Cloud Code Gemini や Claude に貼り付けます。
+- 生成された TOON をコピーして、Cloud Code Gemini や Claude に貼り付けます。
 > 「この TOON 構造に、お気に入り機能を追加して修正版を TOON で返して」
 
 #### 3. 差分を適用する（開発中）
@@ -87,7 +88,8 @@ git push origin main
 - 柔軟な Props 追加: コンポーネントの閉じタグ /> を検知して、その直前に新しい Props を改行付きで挿入します。
 
 #### 3. プロジェクト全体を一括で「量子化」する
-ディレクトリ内のすべての TypeScript/TSX ファイルをスキャンし、プロジェクトの構造を1つの TOON ブロックにまとめます。AIにプロジェクト全体のコンテキスト（依存関係やアーキテクチャ）を伝えたい場合に有効です。
+- ディレクトリ内のすべての TypeScript/TSX ファイルをスキャンし、プロジェクトの構造を1つの TOON ブロックにまとめます。
+- AIにプロジェクト全体のコンテキスト（依存関係やアーキテクチャ）を伝えたい場合に有効です。
 
 AIへのプロンプト例:
 
@@ -98,10 +100,10 @@ python 2toon.py . > full_project.toon
 ```
 ---
 # CoD + TOON + GSD フレームワークの定義
-要素,役割,フェーズ,アウトプット
-CoD,思考の凝縮,Plan (戦略),A -> B -> C (ロジックの矢印)
-TOON,構造の量子化,Design (設計),component:X { logic:Y } (構造データ)
-GSD,実行の自動化,Execute (実行),toon2code.py による自動マージとビルド
+- 要素,役割,フェーズ,アウトプット
+- CoD,思考の凝縮,Plan (戦略),A -> B -> C (ロジックの矢印)
+- TOON,構造の量子化,Design (設計),component:X { logic:Y } (構造データ)
+- GSD,実行の自動化,Execute (実行),toon2code.py による自動マージとビルド
 
 # 「GSD」ワークフロー
 - Plan (CoD): AIに Draft: A -> B -> C と伝え、TOONパッチを出力させる。
@@ -110,10 +112,10 @@ GSD,実行の自動化,Execute (実行),toon2code.py による自動マージと
 - Done: エラーがなければ実装完了。エラーがあれば、表示された type:error_log をAIに投げて修正TOONを貰い、再度 gsd.py を回す。
 ---
 # GSD 自己修復ワークフロー
-Execute: python gsd.py patch.toon target.tsx でパッチ適用。
-Diagnose: python gsd_repair.py が自動で型チェックし、エラーをTOON化。
-Draft & Repair: AIに「診断TOON」を投げ、新しい「修正TOON」を受け取る。
-Repeat: 1に戻る。
+- Execute: python gsd.py patch.toon target.tsx でパッチ適用。
+- Diagnose: python gsd_repair.py が自動で型チェックし、エラーをTOON化。
+- Draft & Repair: AIに「診断TOON」を投げ、新しい「修正TOON」を受け取る。
+- Repeat: 1に戻る。
 ---
 # 自律型自動修復
 gsd_autonomous.py
