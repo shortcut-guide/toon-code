@@ -94,7 +94,7 @@ AIへのプロンプト例:
 「これがプロジェクト全体の構造です。この構成を維持したまま、新しい共通コンポーネント UserAvatar を components/common に作成し、全ページで適用する設計をTOONで出して。」
 
 ```bash
-python project2toon.py . > full_project.toon
+python 2toon.py . > full_project.toon
 ```
 ---
 # CoD + TOON + GSD フレームワークの定義
