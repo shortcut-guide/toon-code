@@ -1,5 +1,8 @@
 import os
 import sys
+# スクリプトがあるディレクトリを検索パスの先頭に追加
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from ts2toon import generate_toon # 既存のロジックを再利用
 
 def project_to_toon(root_dir):
