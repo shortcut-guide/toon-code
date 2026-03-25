@@ -39,7 +39,9 @@ def generate_toon(file_path):
 
     # --- 6. JSON (Config/Data) ---
     elif ext == '.json':
-        return f"type:json\n  keys:[{','.join(re.findall(r'\"(\w+)\":', code)[:15])}]"
+        # もしくは、もっとシンプルに一度変数に出してから f-string に入れる（これが一番安全）
+        keys_str = ','.join(re.findall(r'"(\w+)":', code)[:15])
+        return f"type:json\n  keys:[{keys_str}]"
 
     return f"type:raw\n  file:{os.path.basename(file_path)}"
 
@@ -64,7 +66,9 @@ def parse_typescript(code):
         for p_name, p_type in props: toon.append(f"    {p_name}:{p_type.strip().replace(' ', '')}")
     if hooks:
         toon.append("  logic:")
-        for vars, name, args in hooks: toon.append(f"    {name}({args.strip()}) -> [{re.sub(r'\s+', '', vars)}]")
+        for vars, name, args in hooks:
+            clean_vars = re.sub(r'\s+', '', vars)
+            toon.append(f"    {name}({args.strip()}) -> [{clean_vars}]")
     if components:
         toon.append(f"  render_tree:[{','.join(components)}]")
     
