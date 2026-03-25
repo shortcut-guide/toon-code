@@ -25,16 +25,24 @@ def merge_toon_to_code_v2(toon_path, target_code_path):
     # --- 2. Logic (Hooks) のマージ ---
     logic_section = re.search(r'logic:(.*?)(?=\n\s*\w+:|$)', toon_content, re.DOTALL)
     if logic_section:
-        hooks = re.findall(r'(\w+)\((.*?)\) -> \[(.*?)\]', logic_section.group(1))
+        # 型定義 <...> を含むパターンに対応
+        hooks = re.findall(r'([\w<>|.\s]+)\((.*?)\)\s*->\s*\[(.*?)\]', logic_section.group(1))
         for h_name, h_args, h_vars in hooks:
             h_vars = h_vars.strip()
+            h_name = h_name.strip()
+            
             if h_vars not in code:
-                # 最後のHookの直後に挿入
-                last_hook_pos = [m.end() for m in re.finditer(r'const\s+[\{\[].*?\}\]\s*=\s*\w+\(.*\);', code)]
-                if last_hook_pos:
-                    pos = last_hook_pos[-1]
-                    new_line = f"\n  const {{ {h_vars} }} = {h_name}({h_args});"
-                    code = code[:pos] + new_line + code[pos:]
+                # 挿入位置の特定
+                last_hook_pos = [m.end() for m in re.finditer(r'const\s+.*?\s*=\s*\w+.*?;', code)]
+                pos = last_hook_pos[-1] if last_hook_pos else 0
+                
+                # useStateなどの配列形式か、useRefなどの単一変数形式かを判定
+                if "," in h_vars:
+                    new_line = f"\n  const [{h_vars}] = {h_name}({h_args});"
+                else:
+                    new_line = f"\n  const {h_vars} = {h_name}({h_args});"
+                
+                code = code[:pos] + new_line + code[pos:]
 
     # --- 3. 【拡張】明示的Props注入 (@Component[prop:val]) ---
     # @ComponentName[prop:value] を抽出
