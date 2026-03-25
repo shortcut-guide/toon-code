@@ -41,7 +41,7 @@ cd toon-code
 既存のコンポーネントやロジックを解析し、AI 送信用の TOON データを生成します。
 
 ```bash
-python ts2toon.py path/to/YourComponent.tsx
+python toon-code/ts2toon.py path/to/YourComponent.tsx
 ```
 
 **Output Example:**
