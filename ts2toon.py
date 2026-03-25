@@ -46,29 +46,33 @@ def generate_toon(file_path):
     return f"type:raw\n  file:{os.path.basename(file_path)}"
 
 def parse_typescript(code):
-    comp_match = re.search(r'export default function (\w+)', code)
+    # コンポーネント名の抽出を強化（export function も対象に）
+    comp_match = re.search(r'export (?:default )?(?:function|const) (\w+)', code)
     comp_name = comp_match.group(1) if comp_match else "Module"
     
+    # Imports: 重複排除とクリーンアップ
     imports = re.findall(r'from ["\'](.+?)["\']', code)
-    clean_imports = [imp.split('/')[-1] for imp in imports]
+    clean_imports = sorted(list(set([imp.split('/')[-1] for imp in imports])))
 
-    props_block = re.search(r'type Props = \{(.*?)\};', code, re.DOTALL)
-    props = re.findall(r'(\w+)\??:\s*([\w\[\]<>| ]+)', props_block.group(1)) if props_block else []
-
-    hooks = re.findall(r'const\s+[\{\[]?\s*([\w\s,:]+)\s*[\}\]]?\s*=\s*(\w+)\((.*?)\)', code)
-    components = sorted(list(set(re.findall(r'<([A-Z][\w\.]*)', code))))
+    # Hooks: 戻り値が {} や [] のケース、および複数行に対応
+    # 修正ポイント: 非欲張りマッチで正確に引数と戻り値を取得
+    hooks = re.findall(r'const\s+[\{\[\s]*([\w\s,:]+)[\}\]\s]*\s*=\s*(\w+)\((.*?)\)', code, re.DOTALL)
 
     toon = [f"component:{comp_name}"]
     if '"use client"' in code or "'use client'" in code: toon.append("  client:true")
-    if clean_imports: toon.append(f"  imports:[{','.join(dict.fromkeys(clean_imports))}]")
-    if props:
-        toon.append("  props:")
-        for p_name, p_type in props: toon.append(f"    {p_name}:{p_type.strip().replace(' ', '')}")
+    if clean_imports: toon.append(f"  imports:[{','.join(clean_imports)}]")
+    
+    # logic セクションの構造化
     if hooks:
         toon.append("  logic:")
         for vars, name, args in hooks:
+            # 改行や余計な空白を削除して圧縮
             clean_vars = re.sub(r'\s+', '', vars)
-            toon.append(f"    {name}({args.strip()}) -> [{clean_vars}]")
+            clean_args = re.sub(r'\s+', ' ', args).strip()
+            toon.append(f"    {name}({clean_args}) -> [{clean_vars}]")
+            
+    # Render Tree (TSXのみ)
+    components = sorted(list(set(re.findall(r'<([A-Z][\w\.]*)', code))))
     if components:
         toon.append(f"  render_tree:[{','.join(components)}]")
     
