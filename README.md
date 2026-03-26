@@ -28,6 +28,7 @@ TOON
 
 ```bash
 git clone https://github.com/shortcut-guide/toon-code.git
+pip install tree-sitter tree-sitter-typescript
 ```
 
 ※ 現在、Python 3.8+ が必要です。
