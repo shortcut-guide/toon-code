@@ -45,16 +45,48 @@ python toon-code/ts2toon.py path/to/YourComponent.tsx
 
 **Output Example:**
 ```text
-component:RankingList
+component:ChatMessage
   client:true
-  imports:[usePathname,Product,useRankingPagination]
-  props:
-    products:Product[]
-    pageSize:int
-  logic:
-    useRankingPagination(products,pageSize) -> [page,totalPages,gotoPage]
+  imports:
+    - react: [useEffect,useRef]
+    - @/components/ui/avatar: [Avatar,AvatarFallback,AvatarImage]
+    - @/components/ui/scroll-area: [ScrollArea]
+    - @/lib/utils: [cn]
+    - lucide-react: [ThumbsDown,ThumbsUp]
+  types:
+    - type Message = {id: string; sender: 'user' | 'bot'; content: string; timestamp: Date; rating?: number;}
+    - interface MessageListProps {messages: Message[]; isTyping?: boolean; onRateMessage?: (messageId: string, rating: number) => void;}
   render_tree:
-    contains:[RankingItem,RankingPagination,LoadingOverlay]
+    - div(className:{cn("flex w-max max-w-[80%] flex-col gap-2 rounded-lg px-3 py-2 text-sm", message.sender === "user" ? "ml-auto bg-primary text-primary-foreground" : "bg-muted text-foreground")})
+    - div(className:"flex items-center gap-2")
+    - Avatar(className:"h-6 w-6")
+    - AvatarFallback(className:"text-[10px] bg-primary text-primary-foreground", text:"JP")
+    - span(className:"font-medium", text:"{message.sender === "user" ? "You" : "myula Support"}")
+    - div(className:"whitespace-pre-wrap", text:"{message.content}")
+    - div(className:"flex items-center justify-between gap-4")
+    - div(className:"flex items-center gap-1")
+    - button(className:{cn("p-1 rounded hover:bg-black/5 transition-colors", message.rating === 1 && "text-blue-600 bg-blue-50")}, text:"Helpful")
+    - ThumbsUp
+    - button(className:{cn("p-1 rounded hover:bg-black/5 transition-colors", message.rating === -1 && "text-red-600 bg-red-50")}, text:"Not helpful")
+    - ThumbsDown
+    - div(className:{cn("text-[10px] opacity-70 ml-auto", message.sender === "user" ? "text-primary-foreground" : "text-muted-foreground")}, text:"{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}")
+---
+component:MessageList
+  logic:
+    useRef(<HTMLDivElement>(null)) -> [scrollRef]
+  render_tree:
+    - ScrollArea(className:"h-[350px] p-4")
+    - div(className:"flex flex-col gap-4 pb-2")
+    - ChatMessage
+    - div(className:"flex w-max max-w-[80%] flex-col gap-2 rounded-lg bg-muted px-3 py-2 text-sm")
+    - div(className:"flex items-center gap-2")
+    - Avatar(className:"h-6 w-6")
+    - AvatarFallback(className:"text-[10px] bg-primary text-primary-foreground", text:"JP")
+    - span(className:"font-medium", text:"myula Support")
+    - div(className:"flex gap-1 py-1")
+    - span(className:"w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce")
+    - span(className:"w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:0.2s]")
+    - span(className:"w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:0.4s]")
 ```
 
 #### 2. AI に依頼する
@@ -99,7 +131,7 @@ python toon-code/2toon.py . > full_project.toon
 ```
 ---
 # minify+TOON
-約65%の削減
+約40〜45%減
 1. minify
 2. TOON
 3. 復元
