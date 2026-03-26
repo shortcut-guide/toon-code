@@ -98,6 +98,20 @@ AIへのプロンプト例:
 python toon-code/2toon.py . > full_project.toon
 ```
 ---
+# minify+TOON
+約65%の削減
+1. minify
+2. TOON
+3. 復元
+
+[https://github.com/shortcut-guide/minifyForAI](https://github.com/shortcut-guide/minifyForAI)
+
+## 問題点
+⭕️ 状態管理(useState)やイベントハンドラのロジックは完璧に復元されています。
+❌ コメントは復元されていません。
+❌ className="counter-wrapper" などのUIの詳細情報はTOONに含まれていなかったため、AIが推測して省略（または別の名前で補完）しています。
+
+---
 # CoD + TOON + GSD フレームワークの定義
 - 要素,役割,フェーズ,アウトプット
 - CoD,思考の凝縮,Plan (戦略),A -> B -> C (ロジックの矢印)
