@@ -81,6 +81,68 @@ def merge_toon_to_code_v3(toon_path, target_code_path):
         # return 文を TOON の定義に合わせて置換
         code = re.sub(r'return\s+\{?.*?\}?;', f'return {{ {ret_vars} }};', code, flags=re.DOTALL)
 
+    # --- 6. 【新規追加】 Render Tree / JSX className の復元・マージ ---
+    render_tree_match = re.search(r'render_tree:\n((?:\s+-\s+.*\n?)*)', toon_content)
+    if render_tree_match:
+        render_lines = render_tree_match.group(1).strip().split('\n')
+        
+        # パターンA: 新規生成時（JSXがまだない場合） -> 雛形を組む
+        if "return null;" in code:
+            jsx_elements = []
+            for line in render_lines:
+                line = line.strip()
+                if line.startswith('- '):
+                    element_def = line[2:]
+                    tag_match = re.match(r'([a-zA-Z0-9_]+)(?:\(className:"([^"]*)"\))?', element_def)
+                    if tag_match:
+                        tag_name = tag_match.group(1)
+                        class_val = tag_match.group(2)
+                        
+                        attr_str = f' className="{class_val}"' if class_val else ""
+                        if tag_name[0].isupper():
+                            # カスタムコンポーネント (自己修了タグ)
+                            jsx_elements.append(f'      <{tag_name}{attr_str} />')
+                        else:
+                            # 標準HTMLタグ
+                            jsx_elements.append(f'      <{tag_name}{attr_str}></{tag_name}>')
+            
+            jsx_string = "return (\n    <>\n" + "\n".join(jsx_elements) + "\n    </>\n  );"
+            code = code.replace("return null;", jsx_string)
+            
+        # パターンB: 既存ファイルへのマージ -> クラス名を上書き/追記
+        else:
+            for line in render_lines:
+                line = line.strip()
+                if line.startswith('- '):
+                    element_def = line[2:]
+                    # TOONからクラス名を持つ要素のみを抽出
+                    tag_match = re.match(r'([a-zA-Z0-9_]+)\(className:"([^"]*)"\)', element_def)
+                    if tag_match:
+                        tag_name = tag_match.group(1)
+                        new_class = tag_match.group(2)
+                        
+                        # 該当するタグをソースコード内から正規表現で検索
+                        # 例: <header ... > または <header>
+                        tag_pattern = re.compile(rf'(<\s*{tag_name}\b)([^>]*?)(/?>)', re.DOTALL)
+                        
+                        def update_tag(m):
+                            tag_start = m.group(1)
+                            attrs = m.group(2) or ""
+                            tag_end = m.group(3)
+                            
+                            # すでにclassNameが存在する場合は値を置換、無い場合は追加
+                            if 'className=' in attrs:
+                                # "..." 形式と '...' 形式の単純な文字列クラス名のみ置換
+                                attrs = re.sub(r'className\s*=\s*"[^"]*"', f'className="{new_class}"', attrs)
+                                attrs = re.sub(r"className\s*=\s*'[^']*'", f'className="{new_class}"', attrs)
+                            else:
+                                attrs = f' className="{new_class}"' + attrs
+                                
+                            return tag_start + attrs + tag_end
+
+                        # 最初に見つかった該当タグのclassNameを更新
+                        code = tag_pattern.sub(update_tag, code, count=1)
+
     # 修正結果の保存
     with open(target_code_path, 'w', encoding='utf-8') as f:
         f.write(code)
