@@ -23,17 +23,24 @@ def merge_toon_to_code_v3(toon_path, target_code_path):
     if "client:true" in toon_content and '"use client"' not in code:
         code = '"use client";\n\n' + code
 
-    import_match = re.search(r'imports:\[(.*?)\]', toon_content)
-    if import_match:
-        new_imports = [imp.strip() for imp in import_match.group(1).split(',')]
-        for imp in new_imports:
-            if imp and f"from" not in code and imp not in code:
-                # 汎用的なインポート文の挿入（必要に応じてパスを調整）
-                if imp in ["useState", "useEffect", "useRef", "useCallback"]:
-                    if 'import { ' + imp not in code:
-                        code = f"import {{ {imp} }} from 'react';\n" + code
-                else:
-                    code = f"import {{ {imp} }} from './{imp}';\n" + code
+    # imports を解析して復元
+    import_section_match = re.search(r'imports:\n((?:\s+-\s+.*\n?)*)', toon_content)
+    if import_section_match:
+        import_lines = import_section_match.group(1).strip().split('\n')
+        for line in import_lines:
+            line = line.strip()
+            if line.startswith('- '):
+                # 例: - ../constants/categories: [NAV_CATEGORIES,MEGA_CATEGORIES]
+                match = re.match(r'-\s+(.+?):\s+\[(.*?)\]', line)
+                if match:
+                    path = match.group(1)
+                    items = match.group(2)
+                    
+                    # 既存のコードにこのパスからのインポートが存在しない場合のみ追加
+                    if f'from "{path}"' not in code and f"from '{path}'" not in code:
+                        # 雑な判定ですが、先頭が大文字1つだけの場合はデフォルトインポートとして扱う等の調整も可能
+                        # ここでは安全に名前付きインポート { } として復元します
+                        code = f'import {{ {items} }} from "{path}";\n' + code
 
     # --- 2. Component/Hook Wrapper ---
     comp_match = re.search(r'(?:component|hook):(\w+)', toon_content)
