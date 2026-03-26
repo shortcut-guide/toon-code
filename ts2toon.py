@@ -50,17 +50,37 @@ def parse_typescript(code):
     comp_match = re.search(r'export (?:default )?(?:function|const) (\w+)', code)
     comp_name = comp_match.group(1) if comp_match else "Module"
     
-    # Imports: 重複排除とクリーンアップ
-    imports = re.findall(r'from ["\'](.+?)["\']', code)
-    clean_imports = sorted(list(set([imp.split('/')[-1] for imp in imports])))
+    # --- 【改修1】Imports: パスと変数の関係を正確に保持 ---
+    import_dict = {}
+    
+    # 名前付きインポート (import { A, B } from "path")
+    named_imports = re.findall(r'import\s+\{([^}]+)\}\s+from\s+["\']([^"\']+)["\']', code)
+    for items, path in named_imports:
+        clean_items = [i.strip() for i in items.split(',')]
+        if path not in import_dict:
+            import_dict[path] = []
+        import_dict[path].extend(clean_items)
+        
+    # デフォルトインポート (import A from "path")
+    default_imports = re.findall(r'import\s+(\w+)\s+from\s+["\']([^"\']+)["\']', code)
+    for item, path in default_imports:
+        if path not in import_dict:
+            import_dict[path] = []
+        import_dict[path].append(item)
 
     # Hooks: 戻り値が {} や [] のケース、および複数行に対応
-    # 修正ポイント: 非欲張りマッチで正確に引数と戻り値を取得
     hooks = re.findall(r'const\s+[\{\[\s]*([\w\s,:]+)[\}\]\s]*\s*=\s*(\w+)\((.*?)\)', code, re.DOTALL)
 
     toon = [f"component:{comp_name}"]
     if '"use client"' in code or "'use client'" in code: toon.append("  client:true")
-    if clean_imports: toon.append(f"  imports:[{','.join(clean_imports)}]")
+    
+    # 抽出したインポート情報をTOONにリスト形式で追加
+    if import_dict:
+        toon.append("  imports:")
+        for path, items in import_dict.items():
+            # 重複を排除し、空文字を消す
+            unique_items = sorted(list(set([i for i in items if i])))
+            toon.append(f"    - {path}: [{','.join(unique_items)}]")
     
     # logic セクションの構造化
     if hooks:
@@ -71,7 +91,7 @@ def parse_typescript(code):
             clean_args = re.sub(r'\s+', ' ', args).strip()
             toon.append(f"    {name}({clean_args}) -> [{clean_vars}]")
             
-    # --- 【変更点】Render Tree (classNameの保持) ---
+    # --- Render Tree: classNameの保持 ---
     tags = re.findall(r'<([a-zA-Z0-9_]+)([^>]*)>', code)
     render_elements = []
     
@@ -88,7 +108,6 @@ def parse_typescript(code):
                 render_elements.append(f'{tag_name}(className:"{clean_class}")')
         else:
             # classNameがない場合は「大文字始まりのコンポーネント」だけを残す
-            # （クラスのないdivやspan等を拾うとノイズになるため除外）
             if tag_name[0].isupper():
                 render_elements.append(tag_name)
 
