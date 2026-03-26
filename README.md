@@ -93,8 +93,11 @@ component:MessageList
 - 生成された TOON をコピーして、Cloud Code Gemini や Claude に貼り付けます。
 > 「この TOON 構造に、お気に入り機能を追加して修正版を TOON で返して」
 
-#### 3. 差分を適用する（開発中）
-AI から返ってきた TOON を元のコードにマージします。
+#### 3. 復元する
+AI から返ってきた TOON を復元します。
+```
+python toon-code/toon2code.py
+```
 
 ---
 
