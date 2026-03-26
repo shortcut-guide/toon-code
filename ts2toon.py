@@ -71,10 +71,38 @@ def parse_typescript(code):
             clean_args = re.sub(r'\s+', ' ', args).strip()
             toon.append(f"    {name}({clean_args}) -> [{clean_vars}]")
             
-    # Render Tree (TSXのみ)
-    components = sorted(list(set(re.findall(r'<([A-Z][\w\.]*)', code))))
-    if components:
-        toon.append(f"  render_tree:[{','.join(components)}]")
+    # --- 【変更点】Render Tree (classNameの保持) ---
+    tags = re.findall(r'<([a-zA-Z0-9_]+)([^>]*)>', code)
+    render_elements = []
+    
+    for tag_name, attrs in tags:
+        # className の抽出（"", '', {} のパターンに対応）
+        class_match = re.search(r'className\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|\{([^}]*)\})', attrs)
+        
+        if class_match:
+            # マッチしたグループのうち、Noneでないものを取得
+            class_value = class_match.group(1) or class_match.group(2) or class_match.group(3)
+            if class_value:
+                # テンプレートリテラル内の改行などを潰して1行にする
+                clean_class = re.sub(r'\s+', ' ', class_value).strip()
+                render_elements.append(f'{tag_name}(className:"{clean_class}")')
+        else:
+            # classNameがない場合は「大文字始まりのコンポーネント」だけを残す
+            # （クラスのないdivやspan等を拾うとノイズになるため除外）
+            if tag_name[0].isupper():
+                render_elements.append(tag_name)
+
+    # 重複を排除（元の順序を維持）
+    unique_elements = []
+    for el in render_elements:
+        if el not in unique_elements:
+            unique_elements.append(el)
+
+    # 出力フォーマットを見やすい箇条書きリストに変更
+    if unique_elements:
+        toon.append("  render_tree:")
+        for el in unique_elements:
+            toon.append(f"    - {el}")
     
     return "\n".join(toon)
 
