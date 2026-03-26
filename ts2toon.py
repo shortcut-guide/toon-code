@@ -46,81 +46,92 @@ def generate_toon(file_path):
     return f"type:raw\n  file:{os.path.basename(file_path)}"
 
 def parse_typescript(code):
-    # コンポーネント名の抽出を強化（export function も対象に）
     comp_match = re.search(r'export (?:default )?(?:function|const) (\w+)', code)
     comp_name = comp_match.group(1) if comp_match else "Module"
     
-    # --- 【改修1】Imports: パスと変数の関係を正確に保持 ---
+    # 1. Imports (パスと変数を維持)
     import_dict = {}
-    
-    # 名前付きインポート (import { A, B } from "path")
     named_imports = re.findall(r'import\s+\{([^}]+)\}\s+from\s+["\']([^"\']+)["\']', code)
     for items, path in named_imports:
         clean_items = [i.strip() for i in items.split(',')]
-        if path not in import_dict:
-            import_dict[path] = []
+        if path not in import_dict: import_dict[path] = []
         import_dict[path].extend(clean_items)
         
-    # デフォルトインポート (import A from "path")
     default_imports = re.findall(r'import\s+(\w+)\s+from\s+["\']([^"\']+)["\']', code)
     for item, path in default_imports:
-        if path not in import_dict:
-            import_dict[path] = []
+        if path not in import_dict: import_dict[path] = []
         import_dict[path].append(item)
 
-    # Hooks: 戻り値が {} や [] のケース、および複数行に対応
+    # --- 【新規】2. Interface / Type の保持 ---
+    interfaces = re.findall(r'(?:export\s+)?interface\s+(\w+)\s*\{([^}]+)\}', code)
+    types = re.findall(r'(?:export\s+)?type\s+(\w+)\s*=\s*([^;]+);', code)
+
+    # 3. Hooks
     hooks = re.findall(r'const\s+[\{\[\s]*([\w\s,:]+)[\}\]\s]*\s*=\s*(\w+)\((.*?)\)', code, re.DOTALL)
 
     toon = [f"component:{comp_name}"]
     if '"use client"' in code or "'use client'" in code: toon.append("  client:true")
     
-    # 抽出したインポート情報をTOONにリスト形式で追加
     if import_dict:
         toon.append("  imports:")
         for path, items in import_dict.items():
-            # 重複を排除し、空文字を消す
             unique_items = sorted(list(set([i for i in items if i])))
             toon.append(f"    - {path}: [{','.join(unique_items)}]")
-    
-    # logic セクションの構造化
+
+    # 型定義をTOONに出力
+    if interfaces or types:
+        toon.append("  types:")
+        for name, body in interfaces:
+            clean_body = re.sub(r'\s+', ' ', body).strip() # 改行を潰して1行に
+            toon.append(f"    - interface {name} {{{clean_body}}}")
+        for name, body in types:
+            clean_body = re.sub(r'\s+', ' ', body).strip()
+            toon.append(f"    - type {name} = {clean_body}")
+            
     if hooks:
         toon.append("  logic:")
         for vars, name, args in hooks:
-            # 改行や余計な空白を削除して圧縮
             clean_vars = re.sub(r'\s+', '', vars)
             clean_args = re.sub(r'\s+', ' ', args).strip()
             toon.append(f"    {name}({clean_args}) -> [{clean_vars}]")
             
-    # --- Render Tree: classNameの保持 ---
-    tags = re.findall(r'<([a-zA-Z0-9_]+)([^>]*)>', code)
+    # --- 【変更】4. Render Tree (全タグ、重複、テキストの保持) ---
+    # 正規表現で「タグと属性」、および「その後ろに続くテキスト/式」を順次抽出
+    tag_pattern = re.compile(r'<([a-zA-Z0-9_]+)([^>]*)>\s*([^<]*)(?:<)?')
     render_elements = []
     
-    for tag_name, attrs in tags:
-        # className の抽出（"", '', {} のパターンに対応）
-        class_match = re.search(r'className\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|\{([^}]*)\})', attrs)
+    for match in tag_pattern.finditer(code):
+        tag_name = match.group(1)
+        attrs = match.group(2)
+        content = match.group(3).strip()
         
+        props = []
+        
+        # classNameの抽出
+        class_match = re.search(r'className\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|\{([^}]*)\})', attrs)
         if class_match:
-            # マッチしたグループのうち、Noneでないものを取得
-            class_value = class_match.group(1) or class_match.group(2) or class_match.group(3)
-            if class_value:
-                # テンプレートリテラル内の改行などを潰して1行にする
-                clean_class = re.sub(r'\s+', ' ', class_value).strip()
-                render_elements.append(f'{tag_name}(className:"{clean_class}")')
-        else:
-            # classNameがない場合は「大文字始まりのコンポーネント」だけを残す
-            if tag_name[0].isupper():
-                render_elements.append(tag_name)
+            class_val = class_match.group(1) or class_match.group(2) or class_match.group(3) or ""
+            clean_class = re.sub(r'\s+', ' ', class_val).strip()
+            if clean_class:
+                props.append(f'className:"{clean_class}"')
+                
+        # テキスト・式の抽出 (例: "カテゴリ", "{user ? ...}")
+        if content and not content.startswith('/'): # 閉じタグのみの検知を除外
+            clean_content = re.sub(r'\s+', ' ', content).strip()
+            if clean_content:
+                props.append(f'text:"{clean_content}"')
+                
+        # 出力フォーマットの構築
+        element_str = tag_name
+        if props:
+            element_str += f'({", ".join(props)})'
+            
+        render_elements.append(element_str)
 
-    # 重複を排除（元の順序を維持）
-    unique_elements = []
-    for el in render_elements:
-        if el not in unique_elements:
-            unique_elements.append(el)
-
-    # 出力フォーマットを見やすい箇条書きリストに変更
-    if unique_elements:
+    # 重複排除（deduplication）を廃止し、すべてのタグをそのまま出力
+    if render_elements:
         toon.append("  render_tree:")
-        for el in unique_elements:
+        for el in render_elements:
             toon.append(f"    - {el}")
     
     return "\n".join(toon)
